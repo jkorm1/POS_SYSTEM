@@ -6,8 +6,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class Order(Base):
     __tablename__ = "orders"
 
-    user_id = Column(String(10), primary_key=True)
-    order_type = Column(String(20))
+    user_id = Column(String(50), primary_key=True)
+    order_type = Column(String(50))
     location = Column(String(100))
     payment = Column(String(20))
     
@@ -17,10 +17,10 @@ class Container(Base):
     __tablename__ = "containers"
 
     container_id = Column(Integer, primary_key=True)
-    order_id = Column(String(10), ForeignKey("orders.user_id"))
+    order_id = Column(String(50), ForeignKey("orders.user_id"))
     container_number = Column(Integer)
     packaging_type = Column(String(50))
-    message = Column(String)
+    message = Column(String(500))
     
     order = relationship("Order", back_populates="containers")
     food_items = relationship("FoodItem", back_populates="container")
@@ -30,7 +30,7 @@ class FoodItem(Base):
 
     item_id = Column(Integer, primary_key=True)
     container_id = Column(Integer, ForeignKey("containers.container_id"))
-    food_name = Column(String(100))
+    food_name = Column(String(200))
     price = Column(Numeric(10, 2))
     
     container = relationship("Container", back_populates="food_items")
