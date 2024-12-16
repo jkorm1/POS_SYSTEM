@@ -27,13 +27,14 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 @app.route('/api/menu-items', methods=['GET', 'POST'])
 def menu_items():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    
+
     if request.method == 'GET':
         try:
             cursor.execute("""
-                SELECT f.item_id, f.food_name, f.price, c.packaging_type 
+                SELECT f.item_id, f.food_name, f.price, c.packaging_type, f.is_ordered
                 FROM food_items f 
                 JOIN containers c ON f.container_id = c.container_id
+                WHERE f.is_ordered = FALSE
                 ORDER BY f.food_name
             """)
             items = cursor.fetchall()
@@ -75,10 +76,10 @@ def menu_items():
 
             # Create food item
             cursor.execute("""
-                INSERT INTO food_items (container_id, food_name, price)
-                VALUES (%s, %s, %s)
-                RETURNING item_id, food_name, price
-            """, (container_id, data['food_name'], price))
+                INSERT INTO food_items (container_id, food_name, price, is_ordered)
+                VALUES (%s, %s, %s, %s)
+                RETURNING item_id, food_name, price, is_ordered
+            """, (container_id, data['food_name'], price, False))
             
             new_item = cursor.fetchone()
             
@@ -208,9 +209,9 @@ def submit_order():
             # Add food items to container
             for item in container['FoodItems']:
                 cursor.execute("""
-                    INSERT INTO food_items (container_id, food_name, price)
-                    VALUES (%s, %s, %s)
-                """, (container_id, item['food_name'], item['Price']))
+                    INSERT INTO food_items (container_id, food_name, price, is_ordered)
+                    VALUES (%s, %s, %s, %s)
+                """, (container_id, item['food_name'], item['Price'], True))
         
         conn.commit()
         return jsonify({"message": "Order submitted successfully", "order_id": order_id}), 201
