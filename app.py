@@ -30,8 +30,8 @@ def menu_items():
 
     if request.method == 'GET':
         try:
-            cursor.execute("""
-                SELECT f.item_id, f.food_name, f.price, c.packaging_type, f.is_ordered
+            cursor.execute(""" 
+                SELECT f.item_id, f.food_name, f.price, c.packaging_type, f.is_ordered, f.image_url
                 FROM food_items f 
                 JOIN containers c ON f.container_id = c.container_id
                 WHERE f.is_ordered = FALSE
@@ -52,7 +52,7 @@ def menu_items():
             data = request.get_json()
             
             # Validate required fields
-            required_fields = ['food_name', 'price', 'packaging_type']
+            required_fields = ['food_name', 'price', 'packaging_type', 'image_url']
             if not all(field in data for field in required_fields):
                 return jsonify({"error": "Missing required fields"}), 400
 
@@ -74,12 +74,12 @@ def menu_items():
             )
             container_id = cursor.fetchone()['container_id']
 
-            # Create food item
-            cursor.execute("""
-                INSERT INTO food_items (container_id, food_name, price, is_ordered)
-                VALUES (%s, %s, %s, %s)
-                RETURNING item_id, food_name, price, is_ordered
-            """, (container_id, data['food_name'], price, False))
+            # Create food item with image_url
+            cursor.execute(""" 
+                INSERT INTO food_items (container_id, food_name, price, is_ordered, image_url)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING item_id, food_name, price, is_ordered, image_url
+            """, (container_id, data['food_name'], price, False, data['image_url']))
             
             new_item = cursor.fetchone()
             
